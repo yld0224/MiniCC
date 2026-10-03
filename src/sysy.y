@@ -4,21 +4,27 @@
 #include <memory>
 #include <string>
 
+#include "AST.hpp"
+
 int yylex();
-void yyerror(std::unique_ptr<std::string>& ast, const char* s);
+void yyerror(std::unique_ptr<CompUnitNode>& ast, const char* s);
 
 %}
 
 %code requires {
     #include <memory>
     #include <string>
+
+    #include "AST.hpp"
 }
 
-%parse-param { std::unique_ptr<std::string> &ast }
+%parse-param { std::unique_ptr<CompUnitNode> &ast }
 
 %union {
     std::string* str_val;
     int int_val;
+    BaseNode* ast_val;
+    DataType type_val;
 }
 
 %token INT
@@ -26,54 +32,59 @@ void yyerror(std::unique_ptr<std::string>& ast, const char* s);
 %token <int_val> INT_CONST
 %token <str_val> IDENT
 
-%type <str_val> FuncDef FuncType Block Stmt Number
+%type <ast_val> FuncDef Block Stmt Number
+%type <type_val> FuncType
 
 %%
 
 CompUnit 
     : FuncDef {
-        ast = std::unique_ptr<std::string>($1);
+        auto func_def = static_cast<FuncDefNode*>($1);
+        
+        ast = std::make_unique<CompUnitNode>(std::unique_ptr<FuncDefNode>(func_def));
     }
     ;
 
 FuncDef
     : FuncType IDENT '(' ')' Block {
-        const auto type = std::unique_ptr<std::string>($1);
-        const auto id = std::unique_ptr<std::string>($2);
-        const auto block = std::unique_ptr<std::string>($5);
-        $$ = new std::string(*type + " " + *id + "() " + *block);
+        auto func_block = static_cast<FuncBlockNode*>($5);
+        auto ident = std::unique_ptr<std::string>($2);
+
+        $$ = new FuncDefNode($1, std::move(*ident), std::unique_ptr<FuncBlockNode>(func_block));
     }
     ;
 
 FuncType
     : INT {
-        $$ = new std::string("int");
+        $$ = DataType::INT;
     }
     ;
 
 Block
     : '{' Stmt '}' {
-        const auto stmt = std::unique_ptr<std::string>($2);
-        $$ = new std::string("{ " + *stmt + " }");
+        auto stmt = static_cast<StmtNode*>($2);
+        
+        $$ = new FuncBlockNode(std::unique_ptr<StmtNode>(stmt));
     }
     ;
 
 Stmt
     : RETURN Number ';' {
-        auto number = std::unique_ptr<std::string>($2);
-        $$ = new std::string("return " + *number + ";");
+        auto numexpr = static_cast<ExprNode*>($2);
+
+        $$ = new RetStmt(std::unique_ptr<ExprNode>(numexpr));
     }
     ;
 
 Number:
     INT_CONST {
-        $$ = new std::string(std::to_string($1));
+        $$ = new NumExpr($1);
     }
     ;
 
 
 %%
 
-void yyerror(std::unique_ptr<std::string>& ast, const char* s) {
+void yyerror(std::unique_ptr<CompUnitNode>& ast, const char* s) {
     std::cerr << "error: " << s << std::endl;
 }

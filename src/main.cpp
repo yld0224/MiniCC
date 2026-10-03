@@ -1,11 +1,11 @@
 #include <cassert>
 #include <cstdio>
-#include <iostream>
 #include <memory>
-#include <string>
+
+#include "AST.hpp"
 
 extern FILE* yyin;
-extern int yyparse(std::unique_ptr<std::string>& ast);
+extern int yyparse(std::unique_ptr<CompUnitNode>& ast);
 
 
 int main(int argc, char* argv[]) {
@@ -15,10 +15,10 @@ int main(int argc, char* argv[]) {
     yyin = fopen(input, "r");
     assert(yyin);
 
-    std::unique_ptr<std::string> ast;
+    std::unique_ptr<CompUnitNode> ast;
     const auto ret = yyparse(ast);
     assert(!ret);
 
-    std::cout << *ast << std::endl;
+    ast->PrintAST(0);
     return 0;
 }

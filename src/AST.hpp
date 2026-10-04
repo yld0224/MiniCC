@@ -22,6 +22,7 @@ class BaseNode {
 public:
     virtual ~BaseNode() = default;
     virtual void PrintAST(size_t indent) const = 0;
+    virtual void GenerateIR(std::ostream& os) const = 0;
 };
 
 class CompUnitNode : public BaseNode {
@@ -29,6 +30,7 @@ class CompUnitNode : public BaseNode {
 public:
     explicit CompUnitNode(std::unique_ptr<FuncDefNode> nd) : func_def_(std::move(nd)) {}
     void PrintAST(size_t indent) const override;
+    void GenerateIR(std::ostream& os) const override;
     
     std::unique_ptr<FuncDefNode> func_def_;
 
@@ -39,6 +41,7 @@ class FuncDefNode : public BaseNode {
 public:
     explicit FuncDefNode(DataType type, std::string ident, std::unique_ptr<FuncBlockNode> block) : type_(type), ident_(std::move(ident)), block_(std::move(block)) {}
     void PrintAST(size_t indent) const override;
+    void GenerateIR(std::ostream& os) const override;
 
     DataType type_;
     std::string ident_;
@@ -55,6 +58,7 @@ public:
     }
 
     void PrintAST(size_t indent) const override;
+    void GenerateIR(std::ostream& os) const override;
 
     std::vector<std::unique_ptr<StmtNode>> statements_;
 };
@@ -73,6 +77,7 @@ class RetStmt : public StmtNode {
 public:
     explicit RetStmt(std::unique_ptr<ExprNode> expr) : StmtNode(StmtType::RETURN), expr_(std::move(expr)) {}
     void PrintAST(size_t indent) const override;
+    void GenerateIR(std::ostream& os) const override;
 
     std::unique_ptr<ExprNode> expr_;
 };
@@ -91,6 +96,7 @@ class NumExpr : public ExprNode {
 public:
     explicit NumExpr(int num) : ExprNode(ExprType::NUMBER), number_(num) {}
     void PrintAST(size_t indent) const override;
+    void GenerateIR(std::ostream& os) const override;
 
     int number_;
 };

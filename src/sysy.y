@@ -86,5 +86,6 @@ Number:
 %%
 
 void yyerror(std::unique_ptr<CompUnitNode>& ast, const char* s) {
+    ast->PrintAST(0);
     std::cerr << "error: " << s << std::endl;
 }

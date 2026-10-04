@@ -1,8 +1,8 @@
-CXX := g++
+CXX := clang++ 
 
 SRC_DIR := src
 BUILD_DIR := build
-TARGET := $(BUILD_DIR)/luscc
+TARGET := $(BUILD_DIR)/compiler
 
 CXXFLAGS := -std=c++17 -Wall -Wextra -g -O0 -I$(BUILD_DIR) -I$(SRC_DIR)
 

@@ -35,7 +35,4 @@ std::string Return::PrintValue(const Program& program) const {
 std::string Integer::PrintValue(const Program& program) const {
     return std::to_string(value_);
 }
-void Program::GenerateRiscV(std::ostream& os) const {
-    
-}
 }

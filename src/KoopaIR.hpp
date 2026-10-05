@@ -26,7 +26,6 @@ class Program {
 
 public:
     void PrintKoopa(std::ostream& os) const;
-    void GenerateRiscV(std::ostream& os) const; 
 
     std::vector<std::unique_ptr<Value>> value_pool_;
     std::vector<ValueID> global_values_;

@@ -5,6 +5,7 @@
 
 #include "AST.hpp"
 #include "KoopaIR.hpp"
+#include "RiscVGenerator.hpp"
 
 extern FILE* yyin;
 extern int yyparse(std::unique_ptr<CompUnitNode>& ast);
@@ -33,7 +34,8 @@ int main(int argc, char* argv[]) {
     if (flag == "-koopa") {
         program.PrintKoopa(ofs);
     } else if (flag == "-riscv") {
-        program.GenerateRiscV(ofs);
+        RiscVGenerator gen;
+        gen.GenerateRiscV(program, ofs);
     }
     ofs.close();
     

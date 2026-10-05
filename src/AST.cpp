@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "AST.hpp"
+#include "KoopaIR.hpp"
 
 
 void CompUnitNode::PrintAST(size_t indent) const {
@@ -11,8 +12,8 @@ void CompUnitNode::PrintAST(size_t indent) const {
     std::cout << space << "CompUnit\n";
     func_def_->PrintAST(indent + 2);
 }
-void CompUnitNode::GenerateIR(std::ostream& os) const {
-    func_def_->GenerateIR(os);
+void CompUnitNode::GenerateIR(koopa::IRBuilder& builder) const {
+    func_def_->GenerateIR(builder);
 }
 
 void FuncDefNode::PrintAST(size_t indent) const {
@@ -22,15 +23,21 @@ void FuncDefNode::PrintAST(size_t indent) const {
     std::cout << space << "  " << "FuncName: " << ident_ << '\n';
     block_->PrintAST(indent + 2);
 }
-void FuncDefNode::GenerateIR(std::ostream& os) const {
-    os << "fun " << "@" << ident_ << "(" << ")";
-    if (type_ == DataType::INT) {
-       os << ": " << "i32";
+void FuncDefNode::GenerateIR(koopa::IRBuilder& builder) const {
+    koopa::Function* func = new koopa::Function();
+
+    func->ident_ = this->ident_;
+    if (this->type_ == DataType::INT){
+        func->ret_type_ = koopa::Type::i32;
     }
-    os << " {\n";
-    os << "%" << "entry:\n";
-    block_->GenerateIR(os);
-    os << "}\n";
+    builder.program_.functions_.push_back(std::unique_ptr<koopa::Function>(func));
+    builder.current_function_ = func;
+    
+    koopa::BasicBlock* entry = new koopa::BasicBlock("entry");
+    func->basic_blocks_.push_back(std::unique_ptr<koopa::BasicBlock>(entry));
+    builder.current_block_ = entry;
+
+    block_->GenerateIR(builder);
 }
 
 void FuncBlockNode::PrintAST(size_t indent) const {
@@ -40,9 +47,9 @@ void FuncBlockNode::PrintAST(size_t indent) const {
         statements_[i]->PrintAST(indent + 2);
     }
 }
-void FuncBlockNode::GenerateIR(std::ostream& os) const {
+void FuncBlockNode::GenerateIR(koopa::IRBuilder& builder) const {
     for (size_t i = 0; i < statements_.size(); ++i) {
-        statements_[i]->GenerateIR(os);
+        statements_[i]->GenerateIR(builder);
     }
 }
 
@@ -51,10 +58,13 @@ void RetStmt::PrintAST(size_t indent) const {
     std::cout << space << "RetStmt\n";
     expr_->PrintAST(indent + 2); 
 }
-void RetStmt::GenerateIR(std::ostream& os) const {
-    os << "ret" << ' ';
-    expr_->GenerateIR(os);
-    os << '\n';
+void RetStmt::GenerateIR(koopa::IRBuilder& builder) const {
+    koopa::ValueID val = this->expr_->GenerateIR(builder);
+    
+    koopa::ValueID nxtid = builder.program_.value_pool_.size();
+    builder.program_.value_pool_.push_back(std::make_unique<koopa::Return>(val));
+    
+    builder.current_block_->instructions_.push_back(nxtid);
 }
 
 void NumExpr::PrintAST(size_t indent) const {
@@ -62,6 +72,8 @@ void NumExpr::PrintAST(size_t indent) const {
     std::cout << space << "NumExpr: " << number_ << '\n'; 
 }
 
-void NumExpr::GenerateIR(std::ostream& os) const {
-    os << number_;
+koopa::ValueID NumExpr::GenerateIR(koopa::IRBuilder& builder) const {
+    koopa::ValueID nxtid = builder.program_.value_pool_.size();
+    builder.program_.value_pool_.push_back(std::make_unique<koopa::Integer>(number_));
+    return nxtid;
 }

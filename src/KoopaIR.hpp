@@ -63,6 +63,7 @@ class Value {
 public:
     explicit Value(ValueType type) : type_(type) {} 
     virtual ~Value() = default;
+    virtual std::string PrintValue(const Program& program) const = 0;
 
     ValueType type_;
 };
@@ -71,7 +72,9 @@ class Return : public Value {
 
 public:
     explicit Return() : Value(ValueType::Return) {}
-    explicit Return(ValueID val) : Value(ValueType::Return), value_(val) {} 
+    explicit Return(ValueID val) : Value(ValueType::Return), value_(val) {}
+    
+    std::string PrintValue(const Program& program) const override;
 
     std::optional<ValueID> value_{std::nullopt};
 };
@@ -80,6 +83,8 @@ class Integer : public Value {
 
 public:
     explicit Integer(int val) : Value(ValueType::Integer), value_(val) {};
+
+    std::string PrintValue(const Program& program) const override;
 
     int value_;
 };

@@ -23,8 +23,12 @@ void yyerror(std::unique_ptr<CompUnitNode>& ast, const char* s);
 %union {
     std::string* str_val;
     int int_val;
+
     BaseNode* ast_val;
+    ExprNode* expr_val; 
+
     DataType type_val;
+    UnaryOP op_val;
 }
 
 %token INT
@@ -32,8 +36,10 @@ void yyerror(std::unique_ptr<CompUnitNode>& ast, const char* s);
 %token <int_val> INT_CONST
 %token <str_val> IDENT
 
-%type <ast_val> FuncDef Block Stmt Number
+%type <ast_val> FuncDef Block Stmt 
+%type <expr_val> Exp PrimaryExp Number UnaryExp
 %type <type_val> FuncType
+%type <op_val> UnaryOp
 
 %%
 
@@ -69,20 +75,48 @@ Block
     ;
 
 Stmt
-    : RETURN Number ';' {
-        auto numexpr = static_cast<ExprNode*>($2);
-
-        $$ = new RetStmt(std::unique_ptr<ExprNode>(numexpr));
+    : RETURN Exp ';' {
+        $$ = new RetStmt(std::unique_ptr<ExprNode>($2));
     }
     ;
 
-Number:
-    INT_CONST {
+Exp
+    : UnaryExp {
+        $$ = $1;
+    }
+    ;
+
+PrimaryExp
+    : '(' Exp ')' {
+        $$ = $2;
+    } | Number {
+        $$ = $1;
+    }
+    ;
+
+Number
+    : INT_CONST {
         $$ = new NumExpr($1);
     }
     ;
 
 
+UnaryExp
+    : PrimaryExp {
+        $$ = $1;
+    } | UnaryOp UnaryExp {
+        $$ = new UnaryExpr($1, std::unique_ptr<ExprNode>($2));
+    }
+    ;
+
+UnaryOp
+    : '+' {
+        $$ = UnaryOP::POS;
+    } | '-' {
+        $$ = UnaryOP::NEG;
+    } | '!' {
+        $$ = UnaryOP::NOT;
+    }
 %%
 
 void yyerror(std::unique_ptr<CompUnitNode>& ast, const char* s) {

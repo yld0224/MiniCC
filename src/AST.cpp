@@ -77,3 +77,26 @@ koopa::ValueID NumExpr::GenerateIR(koopa::IRBuilder& builder) const {
     builder.program_.value_pool_.push_back(std::make_unique<koopa::Integer>(number_));
     return nxtid;
 }
+
+void UnaryExpr::PrintAST(size_t indent) const {
+    std::string space(indent, ' ');
+    std::cout << space << "UnaryExpr\n";
+    std::cout << space << "  " << "OP: ";
+    switch(op_){
+        case (UnaryOP::NEG) : {
+            std::cout << "NEG\n";
+            break;
+        } 
+        case (UnaryOP::POS) : {
+            std::cout << "POS\n";
+            break;
+        }
+        case (UnaryOP::NOT) : {
+            std::cout << "NOT\n";
+            break;
+        }
+    }
+    operand_->PrintAST(indent + 2);
+}
+
+koopa::ValueID UnaryExpr::GenerateIR(koopa::IRBuilder& builder) const {}

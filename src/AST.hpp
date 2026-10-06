@@ -16,7 +16,7 @@ class ExprNode;
 
 enum class DataType { INT };
 enum class StmtType { RETURN };
-enum class ExprType { NUMBER };
+enum class ExprType { BINARY, UNARY, NUMBER };
 
 namespace koopa{
     
@@ -95,6 +95,7 @@ public:
     std::unique_ptr<ExprNode> expr_;
 };
 
+enum class UnaryOP{ POS, NEG, NOT };
 
 class ExprNode : public BaseNode {
 
@@ -113,6 +114,17 @@ public:
     koopa::ValueID GenerateIR(koopa::IRBuilder& builder) const override;
 
     int number_;
+};
+
+class UnaryExpr : public ExprNode {
+
+public:
+    explicit UnaryExpr(UnaryOP op, std::unique_ptr<ExprNode> expr) : ExprNode(ExprType::UNARY), op_(op), operand_(std::move(expr)) {}
+    void PrintAST(size_t indent) const override;
+    koopa::ValueID GenerateIR(koopa::IRBuilder& builder) const override;
+
+    UnaryOP op_;
+    std::unique_ptr<ExprNode> operand_;
 };
 
 #endif //AST_HPP 

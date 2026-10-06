@@ -13,6 +13,7 @@ extern int yyparse(std::unique_ptr<CompUnitNode>& ast);
 
 int main(int argc, char* argv[]) {
     assert(argc == 5);
+    std::string flag = argv[1];
     const auto input = argv[2];
     const auto output = argv[4];
 
@@ -22,13 +23,17 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<CompUnitNode> ast;
     const auto ret = yyparse(ast);
     assert(!ret);
+    
+    if (flag == "-ast") {
+        ast->PrintAST(0);
+        return 0;
+    }
+    
 
     koopa::Program program;
     koopa::IRBuilder builder(program);
     
     ast->GenerateIR(builder);
-
-    std::string flag = argv[1];
 
     std::ofstream ofs(output);
     if (flag == "-koopa") {

@@ -99,4 +99,44 @@ void UnaryExpr::PrintAST(size_t indent) const {
     operand_->PrintAST(indent + 2);
 }
 
-koopa::ValueID UnaryExpr::GenerateIR(koopa::IRBuilder& builder) const {}
+koopa::ValueID UnaryExpr::GenerateIR(koopa::IRBuilder& builder) const {
+    if (this->op_ == UnaryOP::POS) {
+        koopa::ValueID nxtid = this->operand_->GenerateIR(builder);
+        
+        return nxtid;
+    } else if (op_ == UnaryOP::NEG) {
+        koopa::ValueID rhs_id = this->operand_->GenerateIR(builder);
+
+        koopa::ValueID lhs_id = builder.program_.value_pool_.size();
+        builder.program_.value_pool_.push_back(std::make_unique<koopa::Integer>(0));
+        
+        koopa::ValueID nxtid = builder.program_.value_pool_.size();
+        
+        auto ptr = std::make_unique<koopa::Binary>(koopa::BinaryOP::SUB, lhs_id, rhs_id);
+        ptr->tmp_id_ = builder.current_function_->tmp_value_id_;
+        builder.current_function_->tmp_value_id_++;
+
+        builder.program_.value_pool_.push_back(std::move(ptr));
+        builder.current_block_->instructions_.push_back(nxtid);
+
+        return nxtid;
+    } else if (op_ == UnaryOP::NOT) {
+        koopa::ValueID rhs_id = operand_->GenerateIR(builder);
+
+        koopa::ValueID lhs_id = builder.program_.value_pool_.size();
+        builder.program_.value_pool_.push_back( std::make_unique<koopa::Integer>(0));
+
+        koopa::ValueID nxtid = builder.program_.value_pool_.size();
+
+        auto ptr = std::make_unique<koopa::Binary>(koopa::BinaryOP::EQ, lhs_id, rhs_id);
+        ptr->tmp_id_ = builder.current_function_->tmp_value_id_;
+        builder.current_function_->tmp_value_id_++;
+
+        builder.program_.value_pool_.push_back(std::move(ptr));
+        builder.current_block_->instructions_.push_back(nxtid);
+
+        return nxtid;
+    }
+
+    return -1;
+}

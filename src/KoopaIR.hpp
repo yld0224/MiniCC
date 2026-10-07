@@ -28,6 +28,7 @@ public:
     void PrintKoopa(std::ostream& os) const;
 
     std::vector<std::unique_ptr<Value>> value_pool_;
+    
     std::vector<ValueID> global_values_;
     std::vector<std::unique_ptr<Function>> functions_;
 };
@@ -36,6 +37,7 @@ class Function {
 
 public:
     Type ret_type_{Type::unit};
+    std::size_t tmp_value_id_{0};
     std::string ident_;
     std::vector<std::unique_ptr<BasicBlock>> basic_blocks_;
 };
@@ -65,6 +67,7 @@ public:
     virtual std::string PrintValue(const Program& program) const = 0;
 
     ValueType type_;
+    std::optional<size_t> tmp_id_;
 };
 
 class Return : public Value {
@@ -88,7 +91,21 @@ public:
     int value_;
 };
 
+enum class BinaryOP{
+    NE, EQ, GT, LT, GE, LE, ADD, SUB, MUL, DIV, MOD, AND, OR, XOR, SHL, SHR, SAR
+};
 
+class Binary : public Value {
+
+public:
+    explicit Binary(BinaryOP op, ValueID l, ValueID r) :Value(ValueType::Binary), op_(op), lhs_(l), rhs_(r) {}
+
+    std::string PrintValue(const Program& program) const override;
+
+    BinaryOP op_;
+    ValueID lhs_;
+    ValueID rhs_;
+};
 //    Integer(Integer),
 //    ZeroInit(ZeroInit),
 //    Undef(Undef),

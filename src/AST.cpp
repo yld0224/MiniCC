@@ -140,3 +140,9 @@ koopa::ValueID UnaryExpr::GenerateIR(koopa::IRBuilder& builder) const {
 
     return -1;
 }
+
+void BinaryExpr::PrintAST(size_t indent) const {}
+
+koopa::ValueID BinaryExpr::GenerateIR(koopa::IRBuilder& builder) const {
+    return -1;
+}

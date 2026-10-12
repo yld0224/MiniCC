@@ -96,6 +96,7 @@ public:
 };
 
 enum class UnaryOP{ POS, NEG, NOT };
+enum class BinaryOP{ ADD, SUB, MUL, DIV, MOD, LS, GT, LE, GE, EQ, NE, AND, OR };
 
 class ExprNode : public BaseNode {
 
@@ -125,6 +126,17 @@ public:
 
     UnaryOP op_;
     std::unique_ptr<ExprNode> operand_;
+};
+
+class BinaryExpr : public ExprNode {
+    public:
+    explicit BinaryExpr(BinaryOP op, std::unique_ptr<ExprNode> lhs, std::unique_ptr<ExprNode> rhs) : ExprNode(ExprType::BINARY), op_(op), lhs_(std::move(lhs)), rhs_(std::move(rhs)){}
+    void PrintAST(size_t indent) const override;
+    koopa::ValueID GenerateIR(koopa::IRBuilder& builder) const override;
+
+    BinaryOP op_;
+    std::unique_ptr<ExprNode> lhs_;
+    std::unique_ptr<ExprNode> rhs_;
 };
 
 #endif //AST_HPP 

@@ -3,6 +3,8 @@
 
 #include <ostream>
 #include <memory>
+#include <cassert>
+#include <string>
 
 #include "KoopaIR.hpp"
 
@@ -20,9 +22,14 @@ void GenerateInstruction(const std::unique_ptr<koopa::Value>& ptr, std::ostream&
 
             const auto val_id = *ret->value_;
             const auto& val_ptr = program.value_pool_[val_id];
-            GenerateInstruction(val_ptr, os,  program);
 
-            os << "mv a0, t0\n";
+            if (val_ptr->tmp_id_.has_value()) {
+                os << "mv a0, " << "t" << std::to_string(*val_ptr->tmp_id_) << "\n";
+            } else {
+                assert(val_ptr->type_ == koopa::ValueType::Integer);
+                const auto integer = static_cast<koopa::Integer*>(val_ptr.get());
+                os << "li a0, " << integer->value_ << '\n';
+            }
             os << "ret\n";
             break;
         }
@@ -33,6 +40,50 @@ void GenerateInstruction(const std::unique_ptr<koopa::Value>& ptr, std::ostream&
             return;
         }
 
+        case koopa::ValueType::Binary : {
+            const auto binary = static_cast<koopa::Binary*>(ptr.get());
+
+            assert(binary->tmp_id_.has_value());
+
+            const auto& lhs = program.value_pool_[binary->lhs_];
+            const auto& rhs = program.value_pool_[binary->rhs_];
+
+            assert(lhs->type_ == koopa::ValueType::Integer);
+            const auto lhs_integer = static_cast<koopa::Integer*>(lhs.get());
+            assert(lhs_integer->value_ == 0);
+
+            const auto dst = "t" + std::to_string(*binary->tmp_id_);
+
+            if (binary->op_ == koopa::BinaryOP::EQ) {
+                if (rhs->tmp_id_.has_value()) {
+                    const auto src = "t" + std::to_string(*rhs->tmp_id_);
+
+                    os << "seqz " << dst << ", " << src << '\n';
+                } else {
+                    assert(rhs->type_ == koopa::ValueType::Integer);
+                    const auto integer = static_cast<koopa::Integer*>(rhs.get());
+
+                    os << "li " << dst << ", " << integer->value_ << '\n';
+                    os << "seqz " << dst << ", " << dst << '\n';
+                }
+                return;
+            }
+
+            if (binary->op_ == koopa::BinaryOP::SUB) {
+                if (rhs->tmp_id_.has_value()) {
+                    const auto src = "t" + std::to_string(*rhs->tmp_id_);
+
+                    os << "sub " << dst << ", x0, " << src << '\n';
+                } else {
+                    assert(rhs->type_ == koopa::ValueType::Integer);
+                    const auto integer = static_cast<koopa::Integer*>(rhs.get());
+                    os << "li " << dst << ", " << integer->value_ << '\n';
+                    os << "sub " << dst << ", x0, " << dst << '\n';
+                }
+                return;
+            }
+            assert(false);
+        }
         default:{ return; }
     }
 }

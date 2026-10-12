@@ -33,11 +33,13 @@ void yyerror(std::unique_ptr<CompUnitNode>& ast, const char* s);
 
 %token INT
 %token RETURN
+%token LE GE EQ NE AND OR
+
 %token <int_val> INT_CONST
 %token <str_val> IDENT
 
 %type <ast_val> FuncDef Block Stmt 
-%type <expr_val> Exp PrimaryExp Number UnaryExp
+%type <expr_val> Exp PrimaryExp Number UnaryExp MulExp AddExp RelExp EqExp LAndExp LOrExp
 %type <type_val> FuncType
 %type <op_val> UnaryOp
 
@@ -81,10 +83,11 @@ Stmt
     ;
 
 Exp
-    : UnaryExp {
+    : LOrExp {
         $$ = $1;
     }
     ;
+
 
 PrimaryExp
     : '(' Exp ')' {
@@ -117,6 +120,70 @@ UnaryOp
     } | '!' {
         $$ = UnaryOP::NOT;
     }
+    ;
+
+MulExp
+    : UnaryExp {
+        $$ = $1;
+    } | MulExp '*' UnaryExp {
+        $$ = new BinaryExpr(BinaryOP::MUL, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    } | MulExp '/' UnaryExp {
+        $$ = new BinaryExpr(BinaryOP::DIV, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    } | MulExp '%' UnaryExp {
+        $$ = new BinaryExpr(BinaryOP::MOD, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    }
+    ;
+
+AddExp
+    : MulExp {
+        $$ = $1;
+    } | AddExp '+' MulExp {
+        $$ = new BinaryExpr(BinaryOP::ADD, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    } | AddExp '-' MulExp {
+        $$ = new BinaryExpr(BinaryOP::SUB, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    }
+    ;
+
+RelExp
+    : AddExp {
+        $$ = $1;
+    } | RelExp '<' AddExp {
+        $$ = new BinaryExpr(BinaryOP::LS, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    } | RelExp '>' AddExp {
+        $$ = new BinaryExpr(BinaryOP::GT, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    } | RelExp LE AddExp {
+        $$ = new BinaryExpr(BinaryOP::LE, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    } | RelExp GE AddExp {
+        $$ = new BinaryExpr(BinaryOP::GE, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    } 
+    ;
+
+EqExp 
+    : RelExp {
+        $$ = $1;
+    } | EqExp EQ RelExp {
+        $$ = new BinaryExpr(BinaryOP::EQ, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    } | EqExp NE RelExp {
+        $$ = new BinaryExpr(BinaryOP::NE, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    }
+    ;
+
+LAndExp
+    : EqExp {
+        $$ = $1;
+    } | LAndExp AND EqExp {
+        $$ = new BinaryExpr(BinaryOP::AND, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    }
+    ;
+
+LOrExp
+    : LAndExp {
+        $$ = $1;
+    } | LOrExp OR LAndExp {
+        $$ = new BinaryExpr(BinaryOP::OR, std::unique_ptr<ExprNode>($1), std::unique_ptr<ExprNode>($3));
+    }
+    ;
+
 %%
 
 void yyerror(std::unique_ptr<CompUnitNode>& ast, const char* s) {

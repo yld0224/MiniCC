@@ -65,15 +65,20 @@ std::string Binary::PrintValue(const Program& program) const {
     }
 
     switch(this->op_) {
-        case (BinaryOP::SUB) : {
-            return "%" + std::to_string(*tmp_id_) + " = " + "sub " + l + ", " + r;
-        }
-        case (BinaryOP::EQ) : {
-            return "%" + std::to_string(*tmp_id_) + " = " + "eq " + l + ", " + r;
-        }
-        default: {
-            return "invalid";
-        }
+        case (BinaryOP::ADD) : { return "%" + std::to_string(*tmp_id_) + " = " + "add " + l + ", " + r; }
+        case (BinaryOP::SUB) : { return "%" + std::to_string(*tmp_id_) + " = " + "sub " + l + ", " + r; }
+        case (BinaryOP::MUL) : { return "%" + std::to_string(*tmp_id_) + " = " + "mul " + l + ", " + r; }
+        case (BinaryOP::DIV) : { return "%" + std::to_string(*tmp_id_) + " = " + "div " + l + ", " + r; }
+        case (BinaryOP::MOD) : { return "%" + std::to_string(*tmp_id_) + " = " + "mod " + l + ", " + r; }
+        case (BinaryOP::LT)  : { return "%" + std::to_string(*tmp_id_) + " = " + "lt " + l + ", " + r; }
+        case (BinaryOP::LE)  : { return "%" + std::to_string(*tmp_id_) + " = " + "le " + l + ", " + r; }
+        case (BinaryOP::EQ)  : { return "%" + std::to_string(*tmp_id_) + " = " + "eq " + l + ", " + r; }
+        case (BinaryOP::NE)  : { return "%" + std::to_string(*tmp_id_) + " = " + "ne " + l + ", " + r; }
+        case (BinaryOP::GE)  : { return "%" + std::to_string(*tmp_id_) + " = " + "ge " + l + ", " + r; }
+        case (BinaryOP::GT)  : { return "%" + std::to_string(*tmp_id_) + " = " + "gt " + l + ", " + r; }
+        case (BinaryOP::AND) : { return "%" + std::to_string(*tmp_id_) + " = " + "and " + l + ", " + r; }
+        case (BinaryOP::OR)  : { return "%" + std::to_string(*tmp_id_) + " = " + "or " + l + ", " + r; }
+        default: { return "invalid"; }
     }
 }
 
